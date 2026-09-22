@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>모션 챌린지 v4</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0d0f13;color:#fff;font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif}header{padding:14px 20px;border-bottom:1px solid #30343d;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:20px;margin:0}.badge{font-size:12px;background:#242933;padding:7px 10px;border-radius:999px;white-space:nowrap}main{max-width:1500px;margin:auto;padding:16px}.controls{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:13px}button,.file,select{border:0;border-radius:10px;padding:11px 14px;font-weight:750;font-size:14px}.file,button{cursor:pointer}.file,.secondary,select{background:#292e37;color:#fff}.primary{background:#4c8bf5;color:#fff}.danger{background:#453039;color:#fff}input[type=file]{display:none}.hud{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:13px}.stat{background:#171a20;border:1px solid #30343d;border-radius:14px;padding:12px 14px}.stat span{font-size:12px;color:#aeb7c6}.stat strong{display:block;font-size:27px;margin-top:3px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{background:#17191e;border:1px solid #30343d;border-radius:15px;overflow:hidden}.panel h2{font-size:16px;margin:0;padding:12px 14px;border-bottom:1px solid #30343d}.stage{position:relative;background:#050505;aspect-ratio:16/10}.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.stage canvas{pointer-events:none}.status{padding:9px 13px;font-size:13px;color:#d2d7df;display:flex;justify-content:space-between;gap:8px}.fps{font-variant-numeric:tabular-nums;color:#91a2ba}.bottom{margin-top:14px;background:#17191e;border:1px solid #30343d;border-radius:15px;padding:15px}.meterRow{display:flex;align-items:center;gap:15px}.meterWrap{flex:1;min-width:0}.meterHead{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.meter{height:18px;background:#2a3039;border-radius:999px;overflow:hidden}.meter>div{height:100%;width:0;background:linear-gradient(90deg,#4c8bf5,#38d996);transition:width .12s linear}.bigScore{font-size:40px;font-weight:900;min-width:105px;text-align:right;font-variant-numeric:tabular-nums}.message{margin-top:11px;font-size:14px;color:#c6ceda}.ok{color:#45e39a}.warn{color:#ffcf6b}.result{display:none;margin-top:14px;padding:15px;border:1px solid #3b4654;border-radius:13px;background:#20242b}.result.show{display:block}.result strong{font-size:32px}.small{font-size:12px;color:#aeb7c6;line-height:1.55;margin-top:10px}@media(max-width:900px){.grid{grid-template-columns:1fr}.hud{grid-template-columns:1fr 1fr}.meterRow{align-items:flex-start;flex-direction:column}.bigScore{text-align:left}}@media(max-width:500px){.hud{grid-template-columns:1fr 1fr}.stat strong{font-size:22px}}
+
+.exercise-section{max-width:1180px;margin:0 auto 18px;padding:0 16px}
+.exercise-title{font-weight:900;font-size:20px;margin:8px 0 10px}
+.exercise-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.exercise-card{border:2px solid #e5e7eb;border-radius:16px;padding:14px;background:#fff;cursor:pointer;text-align:left;min-height:92px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.exercise-card:hover,.exercise-card.active{border-color:#2563eb;background:#eff6ff}
+.exercise-card b{display:block;font-size:17px;margin-bottom:5px}
+.exercise-card span{font-size:13px;color:#64748b}
+.exercise-empty{border-style:dashed;color:#64748b;cursor:default}
+.selected-exercise{max-width:1180px;margin:0 auto 12px;padding:0 16px;font-weight:800}
+@media(max-width:800px){.exercise-grid{grid-template-columns:repeat(2,1fr)}}
+
+</style></head>
+<body><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><span class="badge">v4 · 운동 선택형</span></header>
+<section class="exercise-section">
+  <div class="exercise-title">🏃 ① 운동 고르기</div>
+  <div id="exerciseGrid" class="exercise-grid"></div>
+</section>
+<div class="selected-exercise" id="selectedExercise">선택된 운동: 임시 영상 직접 선택</div>
+<main>
+<div class="controls">
+<label class="file">테스트용 영상 직접 선택<input id="videoFile" type="file" accept="video/*"></label>
+<button id="cameraBtn" class="primary">② 카메라 시작</button>
+<button id="playBtn" class="secondary">③ 챌린지 시작</button>
+<select id="difficulty" aria-label="난이도"><option value="70">쉬움 · 70점</option><option value="80" selected>보통 · 80점</option><option value="90">어려움 · 90점</option></select><select id="scoreMode" aria-label="채점 모드"><option value="full" selected>전신 채점</option><option value="upper">상체 채점</option></select>
+<button id="resetBtn" class="danger">초기화</button>
+</div>
+<div class="hud">
+<div class="stat"><span>현재 일치도</span><strong id="liveScore">--</strong></div>
+<div class="stat"><span>누적 점수</span><strong id="totalScore">0</strong></div>
+<div class="stat"><span>콤보</span><strong id="combo">0</strong></div>
+<div class="stat"><span>성공 판정</span><strong id="hits">0</strong></div>
+<div class="stat"><span>채점 준비</span><strong id="readyState" style="font-size:18px">확인 중</strong></div>
+</div>
+<div class="grid">
+<section class="panel"><h2>🔴 시범 영상</h2><div class="stage"><video id="demo" playsinline controls></video><canvas id="demoCanvas"></canvas></div><div class="status"><span id="demoStatus">시범 영상을 선택하세요.</span><span id="demoFps" class="fps">0 FPS</span></div></section>
+<section class="panel"><h2>🟢 나의 동작</h2><div class="stage"><video id="cam" playsinline muted></video><canvas id="camCanvas"></canvas></div><div class="status"><span id="camStatus">카메라를 시작하세요.</span><span id="camFps" class="fps">0 FPS</span></div></section>
+</div>
+<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 80점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">전신 채점은 어깨·팔꿈치·손목·골반·무릎·발목을, 상체 채점은 어깨·팔꿈치·손목과 몸통을 중심으로 비교합니다. 필요한 관절이 화면에 충분히 보이지 않으면 위치 안내가 표시됩니다. 성공 기준 이상을 일정 시간 유지하면 점수와 콤보가 올라갑니다.</div></section>
+</main>
+<script type="module">
+import {FilesetResolver,PoseLandmarker,DrawingUtils} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/+esm';
+const $=s=>document.querySelector(s),demo=$('#demo'),cam=$('#cam'),dc=$('#demoCanvas'),cc=$('#camCanvas'),dx=dc.getContext('2d'),cx=cc.getContext('2d');
+const ds=$('#demoStatus'),cs=$('#camStatus'),df=$('#demoFps'),cf=$('#camFps'),live=$('#liveScore'),big=$('#scoreBig'),totalEl=$('#totalScore'),comboEl=$('#combo'),hitsEl=$('#hits'),meter=$('#meterFill'),msg=$('#message'),resultBox=$('#result'),finalScore=$('#finalScore'),finalDetail=$('#finalDetail'),difficulty=$('#difficulty'),thresholdText=$('#thresholdText'),scoreMode=$('#scoreMode'),readyState=$('#readyState');
+let demoPose=null,camPose=null,stream=null,demoLm=null,camLm=null,demoLoop=false,camLoop=false;let dCount=0,cCount=0,dMark=performance.now(),cMark=dMark;let total=0,combo=0,hits=0,lastAward=0,challenge=false,lastDemoTime=-1,lastCamTime=-1;
+function fit(v,c){if(v.videoWidth&&v.videoHeight&&(c.width!==v.videoWidth||c.height!==v.videoHeight)){c.width=v.videoWidth;c.height=v.videoHeight}}
+function draw(result,c,ctx,color){ctx.clearRect(0,0,c.width,c.height);if(!result?.landmarks?.length)return null;const lm=result.landmarks[0],du=new DrawingUtils(ctx);du.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS,{color,lineWidth:4});du.drawLandmarks(lm,{color,radius:3});return lm}
+function angle(a,b,c){const x1=a.x-b.x,y1=a.y-b.y,x2=c.x-b.x,y2=c.y-b.y,m=Math.hypot(x1,y1)*Math.hypot(x2,y2);if(!m)return null;return Math.acos(Math.max(-1,Math.min(1,(x1*x2+y1*y2)/m)))*180/Math.PI}
+const FULL_ANGLES=[[11,13,15],[12,14,16],[13,11,23],[14,12,24],[11,23,25],[12,24,26],[23,25,27],[24,26,28],[11,23,24],[12,24,23]];
+const UPPER_ANGLES=[[11,13,15],[12,14,16],[13,11,23],[14,12,24],[11,23,24],[12,24,23]];
+const FULL_REQUIRED=[11,12,13,14,15,16,23,24,25,26,27,28];
+const UPPER_REQUIRED=[11,12,13,14,15,16,23,24];
+function jointVisible(lm,i){return !!lm?.[i] && (lm[i].visibility??1)>.30}
+function visible(lm,ids){return ids.every(i=>jointVisible(lm,i))}
+function readiness(lm,mode){
+  if(!lm)return {ok:false,text:'사람 찾는 중'};
+  const req=mode==='upper'?UPPER_REQUIRED:FULL_REQUIRED;
+  const count=req.filter(i=>jointVisible(lm,i)).length;
+  const ratio=count/req.length;
+  if(ratio>=.82)return {ok:true,text:'🟢 준비 완료'};
+  if(mode==='full'){
+    const upper=UPPER_REQUIRED.filter(i=>jointVisible(lm,i)).length/UPPER_REQUIRED.length;
+    if(upper>=.75)return {ok:false,text:'🟡 뒤로 이동'};
+  }
+  return {ok:false,text:'🟡 몸이 잘 보이게'};
+}
+function similarity(A,B,mode){
+  if(!A||!B)return null;
+  const angles=mode==='upper'?UPPER_ANGLES:FULL_ANGLES;
+  const diffs=[];
+  for(const t of angles){
+    if(!visible(A,t)||!visible(B,t))continue;
+    const x=angle(A[t[0]],A[t[1]],A[t[2]]),y=angle(B[t[0]],B[t[1]],B[t[2]]);
+    if(x!=null&&y!=null)diffs.push(Math.abs(x-y));
+  }
+  const minNeeded=mode==='upper'?3:5;
+  if(diffs.length<minNeeded)return null;
+  const mean=diffs.reduce((s,v)=>s+v,0)/diffs.length;
+  return Math.max(0,Math.min(100,Math.round(100-mean/90*100)));
+}
+function resetGame(){total=0;combo=0;hits=0;lastAward=0;challenge=false;totalEl.textContent='0';comboEl.textContent='0';hitsEl.textContent='0';live.textContent='--';big.textContent='--';meter.style.width='0%';resultBox.classList.remove('show');readyState.textContent='확인 중'}
+function updateScore(){
+  const mode=scoreMode.value;
+  const dReady=readiness(demoLm,mode), cReady=readiness(camLm,mode);
+  if(!cReady.ok){
+    readyState.textContent=cReady.text;
+    live.textContent='--';big.textContent='--';meter.style.width='0%';
+    msg.textContent=mode==='full'?'🟡 전신이 보이도록 카메라에서 조금 뒤로 이동하세요.':'🟡 상체와 양팔이 화면에 잘 보이도록 위치를 조정하세요.';
+    msg.className='message warn'; return;
+  }
+  if(!dReady.ok){
+    readyState.textContent='🟡 시범 확인';
+    live.textContent='--';big.textContent='--';meter.style.width='0%';
+    msg.textContent='시범 영상에서 채점에 필요한 관절을 찾는 중입니다.';
+    msg.className='message warn'; return;
+  }
+  readyState.textContent='🟢 채점 가능';
+  const s=similarity(demoLm,camLm,mode);
+  if(s==null){live.textContent='--';big.textContent='--';meter.style.width='0%';msg.textContent='관절 정보를 조금 더 확보하는 중입니다.';return}
+  live.textContent=s;big.textContent=s+'점';meter.style.width=s+'%';
+  const threshold=Number(difficulty.value);
+  if(!challenge){msg.textContent='🟢 준비 완료! 챌린지 시작을 눌러 주세요.';msg.className='message ok';return}
+  const now=performance.now();
+  if(s>=threshold){
+    msg.textContent=s>=92?'🔥 PERFECT! 계속 유지하세요!':'✨ 좋아요! 동작이 맞았습니다.';
+    msg.className='message ok';
+    if(now-lastAward>=650){
+      combo++;hits++;
+      const base=s>=92?15:s>=86?12:10;
+      const bonus=Math.min(10,Math.floor(combo/5)*2);
+      total+=base+bonus;lastAward=now;
+      totalEl.textContent=total;comboEl.textContent=combo;hitsEl.textContent=hits;
+    }
+  }else{
+    msg.textContent='시범 동작을 조금 더 정확하게 따라 해 보세요.';
+    msg.className='message warn';
+    if(s<threshold-8)combo=0;
+    comboEl.textContent=combo;
+  }
+}
+function fps(which){const now=performance.now();if(which==='d'){dCount++;if(now-dMark>=1000){df.textContent=Math.round(dCount*1000/(now-dMark))+' FPS';dCount=0;dMark=now}}else{cCount++;if(now-cMark>=1000){cf.textContent=Math.round(cCount*1000/(now-cMark))+' FPS';cCount=0;cMark=now}}}
+async function makePose(vision){return PoseLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',delegate:'GPU'},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.3,minPosePresenceConfidence:.3,minTrackingConfidence:.3})}
+async function init(){try{const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm');[demoPose,camPose]=await Promise.all([makePose(vision),makePose(vision)]);msg.textContent='준비 완료. 시범 영상과 카메라를 준비한 뒤 챌린지를 시작하세요.'}catch(e){console.error(e);msg.textContent='AI 모델을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'}}
+init();
+function runCam(){if(camLoop)return;camLoop=true;const tick=()=>{if(!camLoop)return;if(camPose&&cam.readyState>=2&&!cam.paused){fit(cam,cc);if(cam.currentTime!==lastCamTime){lastCamTime=cam.currentTime;try{const r=camPose.detectForVideo(cam,performance.now());camLm=draw(r,cc,cx,'#22e6a8');cs.textContent=camLm?'🟢 실시간 추적 중':'사람을 찾는 중…';fps('c');updateScore()}catch(e){console.error('cam',e);cs.textContent='웹캠 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+function runDemo(){if(demoLoop)return;demoLoop=true;const tick=()=>{if(!demoLoop)return;if(demoPose&&demo.readyState>=2&&!demo.paused&&!demo.ended){fit(demo,dc);if(demo.currentTime!==lastDemoTime){lastDemoTime=demo.currentTime;try{const r=demoPose.detectForVideo(demo,performance.now());demoLm=draw(r,dc,dx,'#ff5252');ds.textContent=demoLm?'🔴 시범 자세 추적 중':'사람을 찾는 중…';fps('d');updateScore()}catch(e){console.error('demo',e);ds.textContent='시범 영상 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
+$('#videoFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;demo.src=URL.createObjectURL(f);ds.textContent='시범 영상 준비됨. 챌린지 시작을 눌러 주세요.';resetGame()});
+$('#cameraBtn').addEventListener('click',async()=>{try{if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false});cam.srcObject=stream;await cam.play();cs.textContent='카메라 연결됨 — 추적 시작';runCam()}catch(e){console.error(e);cs.textContent='카메라를 열 수 없습니다. 권한을 확인해 주세요.'}});
+$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='먼저 시범 영상을 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;demo.currentTime=0;lastDemoTime=-1;await demo.play();if(cam.paused)await cam.play();runDemo();runCam();msg.textContent='🏁 챌린지 시작! 시범 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
+demo.addEventListener('ended',()=>{if(!challenge)return;challenge=false;combo=0;comboEl.textContent='0';resultBox.classList.add('show');finalScore.textContent=total+'점';finalDetail.textContent=`성공 판정 ${hits}회 · 난이도 ${difficulty.options[difficulty.selectedIndex].text}`;msg.textContent='챌린지가 끝났습니다. 다시 도전하려면 챌린지 시작을 누르세요.';msg.className='message'});
+difficulty.addEventListener('change',()=>{thresholdText.textContent='성공 기준 '+difficulty.value+'점';resetGame()});
+scoreMode.addEventListener('change',()=>{resetGame();msg.textContent=scoreMode.value==='full'?'전신 채점: 머리부터 발끝까지 화면에 들어오게 서 주세요.':'상체 채점: 상체와 양팔이 화면에 잘 보이면 됩니다.';msg.className='message warn';updateScore()});
+$('#resetBtn').addEventListener('click',()=>{demo.pause();if(demo.src)demo.currentTime=0;demoLm=camLm=null;dx.clearRect(0,0,dc.width,dc.height);cx.clearRect(0,0,cc.width,cc.height);df.textContent='0 FPS';cf.textContent='0 FPS';resetGame();msg.textContent='초기화했습니다.';msg.className='message'});
+
+/* =========================================================
+   v4 운동 목록 설정
+   나중에 선생님이 수정할 곳은 아래 EXERCISES 배열입니다.
+   1) videos 폴더에 MP4 업로드
+   2) 아래 file에 파일명 입력
+   3) mode는 full(전신) 또는 upper(상체)
+   ========================================================= */
+const EXERCISES = [
+  { id:"jumpingjack", name:"팔벌려뛰기", file:"", mode:"full", note:"전신 운동 · 영상 준비 중" },
+  { id:"squat",       name:"스쿼트",     file:"", mode:"full", note:"하체 운동 · 영상 준비 중" },
+  { id:"stretch",     name:"상체 스트레칭", file:"", mode:"upper", note:"상체 운동 · 영상 준비 중" },
+  { id:"custom",      name:"내 영상으로 테스트", file:"CUSTOM", mode:"full", note:"지금처럼 MP4를 직접 선택" }
+];
+
+const exerciseGrid = document.getElementById("exerciseGrid");
+const selectedExercise = document.getElementById("selectedExercise");
+
+function renderExercises(){
+  if(!exerciseGrid) return;
+  exerciseGrid.innerHTML="";
+  EXERCISES.forEach(ex=>{
+    const btn=document.createElement("button");
+    btn.className="exercise-card"+(!ex.file && ex.file!=="CUSTOM"?" exercise-empty":"");
+    btn.type="button";
+    btn.innerHTML=`<b>${ex.file==="CUSTOM"?"🧪":(!ex.file?"🎬":"▶️")} ${ex.name}</b><span>${ex.note}</span>`;
+    btn.addEventListener("click",()=>{
+      if(!ex.file){
+        if(selectedExercise) selectedExercise.textContent=`${ex.name}: 아직 시범영상이 등록되지 않았습니다.`;
+        return;
+      }
+      document.querySelectorAll(".exercise-card").forEach(x=>x.classList.remove("active"));
+      btn.classList.add("active");
+      if(scoreMode){
+        scoreMode.value=ex.mode;
+        scoreMode.dispatchEvent(new Event("change"));
+      }
+      if(ex.file==="CUSTOM"){
+        if(selectedExercise) selectedExercise.textContent="선택된 운동: 내 영상으로 테스트";
+        const fi=document.querySelector('input[type="file"]'); if(fi) fi.click();
+        return;
+      }
+      const url=`videos/${ex.file}`;
+      const dv=document.querySelector("video");
+      if(dv){ dv.src=url; dv.load(); }
+      if(selectedExercise) selectedExercise.textContent=`선택된 운동: ${ex.name} · ${ex.mode==="full"?"전신 채점":"상체 채점"}`;
+      if(typeof resetGame==="function") resetGame();
+    });
+    exerciseGrid.appendChild(btn);
+  });
+}
+renderExercises();
+
+</script></body></html>

@@ -3,7 +3,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0d0f13;color:#fff;font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif}header{padding:14px 20px;border-bottom:1px solid #30343d;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:20px;margin:0}.badge{font-size:12px;background:#242933;padding:7px 10px;border-radius:999px;white-space:nowrap}main{max-width:1500px;margin:auto;padding:16px}.controls{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:13px}button,.file,select{border:0;border-radius:10px;padding:11px 14px;font-weight:750;font-size:14px}.file,button{cursor:pointer}.file,.secondary,select{background:#292e37;color:#fff}.primary{background:#4c8bf5;color:#fff}.danger{background:#453039;color:#fff}input[type=file]{display:none}.hud{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:13px}.stat{background:#171a20;border:1px solid #30343d;border-radius:14px;padding:12px 14px}.stat span{font-size:12px;color:#aeb7c6}.stat strong{display:block;font-size:27px;margin-top:3px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{background:#17191e;border:1px solid #30343d;border-radius:15px;overflow:hidden}.panel h2{font-size:16px;margin:0;padding:12px 14px;border-bottom:1px solid #30343d}.stage{position:relative;background:#050505;aspect-ratio:16/10}.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.stage canvas{pointer-events:none}.status{padding:9px 13px;font-size:13px;color:#d2d7df;display:flex;justify-content:space-between;gap:8px}.fps{font-variant-numeric:tabular-nums;color:#91a2ba}.bottom{margin-top:14px;background:#17191e;border:1px solid #30343d;border-radius:15px;padding:15px}.meterRow{display:flex;align-items:center;gap:15px}.meterWrap{flex:1;min-width:0}.meterHead{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.meter{height:18px;background:#2a3039;border-radius:999px;overflow:hidden}.meter>div{height:100%;width:0;background:linear-gradient(90deg,#4c8bf5,#38d996);transition:width .12s linear}.bigScore{font-size:40px;font-weight:900;min-width:105px;text-align:right;font-variant-numeric:tabular-nums}.message{margin-top:11px;font-size:14px;color:#c6ceda}.ok{color:#45e39a}.warn{color:#ffcf6b}.result{display:none;margin-top:14px;padding:15px;border:1px solid #3b4654;border-radius:13px;background:#20242b}.result.show{display:block}.result strong{font-size:32px}.small{font-size:12px;color:#aeb7c6;line-height:1.55;margin-top:10px}@media(max-width:900px){.grid{grid-template-columns:1fr}.hud{grid-template-columns:1fr 1fr}.meterRow{align-items:flex-start;flex-direction:column}.bigScore{text-align:left}}@media(max-width:500px){.hud{grid-template-columns:1fr 1fr}.stat strong{font-size:22px}}
 
-.exercise-section{max-width:1180px;margin:0 auto 18px;padding:0 16px}
+.exercise-section{display:none!important}
 .exercise-title{font-weight:900;font-size:20px;margin:8px 0 10px}
 .exercise-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .exercise-card{border:2px solid #e5e7eb;border-radius:16px;padding:14px;background:#fff;cursor:pointer;text-align:left;min-height:92px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
@@ -11,7 +11,7 @@
 .exercise-card b{display:block;font-size:17px;margin-bottom:5px}
 .exercise-card span{font-size:13px;color:#64748b}
 .exercise-empty{border-style:dashed;color:#64748b;cursor:default}
-.selected-exercise{max-width:1180px;margin:0 auto 12px;padding:0 16px;font-weight:800}
+.selected-exercise{display:none!important}
 @media(max-width:800px){.exercise-grid{grid-template-columns:repeat(2,1fr)}}
 
 
@@ -40,9 +40,8 @@
 .round-feedback-msg{font-size:20px;line-height:1.5;color:#d9e1ec}
 
 
-/* 학생 화면: 거울모드. 영상과 MediaPipe 뼈대를 함께 좌우 반전 */
+/* 학생 화면과 초록색 포즈 뼈대를 함께 거울모드로 표시 */
 #cam,#camCanvas{transform:scaleX(-1);transform-origin:center center}
-
 </style></head>
 <body>
 <section id="loginScreen" aria-label="학생 로그인">
@@ -59,7 +58,7 @@
 <p class="login-help">감일초등학교 AI 체육활동<br>선생님께 받은 아이디와 비밀번호로 로그인하세요.</p>
 </div>
 </section>
-<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">최종 · 거울모드 단계 통과형</span></div></header>
+<div id="appShell"><header><h1>🏉 감일초 럭비 회피 챌린지</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 럭비 회피 챌린지</span></div></header>
 <section class="exercise-section">
   <div class="exercise-title">🏃 ① 운동 고르기</div>
   <div id="exerciseGrid" class="exercise-grid"></div>
@@ -67,7 +66,7 @@
 <div class="selected-exercise" id="selectedExercise">선택된 운동: 임시 영상 직접 선택</div>
 <main>
 <div class="controls">
-<label class="file">테스트용 영상 직접 선택<input id="videoFile" type="file" accept="video/*"></label>
+<label class="file" style="display:none">테스트용 영상 직접 선택<input id="videoFile" type="file" accept="video/*"></label>
 <button id="cameraBtn" class="primary">② 카메라 시작</button>
 <button id="playBtn" class="secondary">③ 챌린지 시작</button>
 <select id="difficulty" aria-label="난이도"><option value="78">쉬움 · 78점</option><option value="86" selected>보통 · 86점</option><option value="92">어려움 · 92점</option></select><select id="scoreMode" aria-label="채점 모드"><option value="full" selected>전신 채점</option><option value="upper">상체 채점</option></select>
@@ -81,10 +80,10 @@
 <div class="stat"><span>채점 준비</span><strong id="readyState" style="font-size:18px">확인 중</strong></div>
 </div>
 <div class="grid">
-<section class="panel"><h2>🔴 시범 영상</h2><div class="stage"><video id="demo" playsinline controls></video><canvas id="demoCanvas"></canvas></div><div class="status"><span id="demoStatus">시범 영상을 선택하세요.</span><span id="demoFps" class="fps">0 FPS</span></div></section>
+<section class="panel"><h2>🔴 시범 영상</h2><div class="stage"><video id="demo" playsinline controls></video><canvas id="demoCanvas"></canvas></div><div class="status"><span id="demoStatus">럭비 회피 시범 영상을 준비 중입니다.</span><span id="demoFps" class="fps">0 FPS</span></div></section>
 <section class="panel"><h2>🟢 나의 동작</h2><div class="stage"><video id="cam" playsinline muted></video><canvas id="camCanvas"></canvas></div><div class="status"><span id="camStatus">카메라를 시작하세요.</span><span id="camFps" class="fps">0 FPS</span></div></section>
 </div>
-<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 나의 동작 화면은 거울모드로 표시됩니다. 시범 캐릭터가 실제로 좌우 이동하는 순간에만 채점하며, 가만히 있는 구간은 무채점입니다. 화면에서 시범과 같은 방향으로 실제 이동해야 점수를 받을 수 있고, 라운드를 성공해야 다음 단계로 올라갑니다.</div></section>
+<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 나의 동작 화면은 거울모드입니다. 화면에서 시범 캐릭터와 같은 방향으로 실제 회피해야 점수를 받을 수 있습니다. 정지 구간은 채점하지 않으며, 라운드를 성공해야 다음 단계로 올라갑니다.</div></section>
 </main>
 <script type="module">
 const roundFeedback=document.getElementById('roundFeedback'),
@@ -270,7 +269,7 @@ function updateScore(){
   directionAttempts++;
 
   const demoDir=demoMove>0?1:-1;
-  // 카메라 화면은 거울모드이므로, 채점도 학생에게 보이는 방향 기준으로 반전한다.
+  // 학생 카메라는 거울모드이므로 화면에 보이는 이동 방향으로 보정
   const displayedCamMove=-camMove;
   const camDir=Math.abs(displayedCamMove)<CAM_MOVE_MIN?0:(displayedCamMove>0?1:-1);
 
@@ -313,7 +312,19 @@ function updateScore(){
 function fps(which){const now=performance.now();if(which==='d'){dCount++;if(now-dMark>=1000){df.textContent=Math.round(dCount*1000/(now-dMark))+' FPS';dCount=0;dMark=now}}else{cCount++;if(now-cMark>=1000){cf.textContent=Math.round(cCount*1000/(now-cMark))+' FPS';cCount=0;cMark=now}}}
 async function makePose(vision){return PoseLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',delegate:'GPU'},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.3,minPosePresenceConfidence:.3,minTrackingConfidence:.3})}
 async function init(){try{const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm');[demoPose,camPose]=await Promise.all([makePose(vision),makePose(vision)]);msg.textContent='준비 완료. 시범 영상과 카메라를 준비한 뒤 챌린지를 시작하세요.'}catch(e){console.error(e);msg.textContent='AI 모델을 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'}}
+
 init();
+
+/* 공개수업용: 럭비 시범 영상을 자동으로 불러온다. */
+function loadRugbyDemo(){
+  demo.src='rugby-dodge.mp4';
+  demo.load();
+  ds.textContent='🏉 럭비 회피 시범 영상 준비됨';
+  const selected=document.getElementById('selectedExercise');
+  if(selected) selected.textContent='선택된 운동: 럭비 회피 챌린지';
+}
+loadRugbyDemo();
+
 function runCam(){if(camLoop)return;camLoop=true;const tick=()=>{if(!camLoop)return;if(camPose&&cam.readyState>=2&&!cam.paused){fit(cam,cc);if(cam.currentTime!==lastCamTime){lastCamTime=cam.currentTime;try{const r=camPose.detectForVideo(cam,performance.now());camLm=draw(r,cc,cx,'#22e6a8');cs.textContent=camLm?'🟢 실시간 추적 중':'사람을 찾는 중…';fps('c');updateScore()}catch(e){console.error('cam',e);cs.textContent='웹캠 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 function runDemo(){if(demoLoop)return;demoLoop=true;const tick=()=>{if(!demoLoop)return;if(demoPose&&demo.readyState>=2&&!demo.paused&&!demo.ended){fit(demo,dc);if(demo.currentTime!==lastDemoTime){lastDemoTime=demo.currentTime;try{const r=demoPose.detectForVideo(demo,performance.now());demoLm=draw(r,dc,dx,'#ff5252');ds.textContent=demoLm?'🔴 시범 자세 추적 중':'사람을 찾는 중…';fps('d');updateScore()}catch(e){console.error('demo',e);ds.textContent='시범 영상 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 $('#videoFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;demo.src=URL.createObjectURL(f);ds.textContent='시범 영상 준비됨. 챌린지 시작을 눌러 주세요.';resetGame()});
@@ -330,7 +341,7 @@ async function playRound(){
   if(cam.paused)await cam.play();
   runDemo();runCam();
 }
-$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='먼저 시범 영상을 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
+$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='럭비 시범 영상을 불러오는 중입니다. 잠시 후 다시 눌러 주세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
 demo.addEventListener('ended',async()=>{
   scoringActive=false;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;demoLm=null;
   if(!challenge)return;
@@ -346,7 +357,7 @@ demo.addEventListener('ended',async()=>{
   roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'다시 도전! 💪';
   roundFeedbackMsg.textContent=roundSuccess
     ? (thisRound<3?'좋아요! 다음 라운드로 올라갑니다.':'멋져요! FINAL ROUND까지 성공했습니다!')
-    : '아직 통과하지 못했어요. 화면의 시범과 같은 방향으로 움직이며 같은 라운드에 다시 도전해요!';
+    : '아직 통과하지 못했어요. 같은 라운드에 다시 도전합니다!';
   roundFeedback.classList.add('show');
 
   await new Promise(r=>setTimeout(r,2200));

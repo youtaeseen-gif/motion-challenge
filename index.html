@@ -41,7 +41,7 @@
 <p class="login-help">감일초등학교 AI 체육활동<br>선생님께 받은 아이디와 비밀번호로 로그인하세요.</p>
 </div>
 </section>
-<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">v5.1 · Firebase 로그인</span></div></header>
+<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 럭비 3라운드</span></div></header>
 <section class="exercise-section">
   <div class="exercise-title">🏃 ① 운동 고르기</div>
   <div id="exerciseGrid" class="exercise-grid"></div>
@@ -66,7 +66,7 @@
 <section class="panel"><h2>🔴 시범 영상</h2><div class="stage"><video id="demo" playsinline controls></video><canvas id="demoCanvas"></canvas></div><div class="status"><span id="demoStatus">시범 영상을 선택하세요.</span><span id="demoFps" class="fps">0 FPS</span></div></section>
 <section class="panel"><h2>🟢 나의 동작</h2><div class="stage"><video id="cam" playsinline muted></video><canvas id="camCanvas"></canvas></div><div class="status"><span id="camStatus">카메라를 시작하세요.</span><span id="camFps" class="fps">0 FPS</span></div></section>
 </div>
-<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 80점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">전신 채점은 어깨·팔꿈치·손목·골반·무릎을, 상체 채점은 어깨·팔꿈치·손목과 몸통을 중심으로 비교합니다. 필요한 관절이 화면에 충분히 보이지 않으면 위치 안내가 표시됩니다. 성공 기준 이상을 일정 시간 유지하면 점수와 콤보가 올라갑니다.</div></section>
+<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 80점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 성공 기준 이상을 일정 시간 유지하면 점수와 콤보가 올라갑니다.</div></section>
 </main>
 <script type="module">
 /* v5.1: Firebase Authentication 실제 로그인 */
@@ -127,29 +127,27 @@ studentPwV5.addEventListener('keydown',e=>{if(e.key==='Enter')enterAppV5();});
 import {FilesetResolver,PoseLandmarker,DrawingUtils} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/+esm';
 const $=s=>document.querySelector(s),demo=$('#demo'),cam=$('#cam'),dc=$('#demoCanvas'),cc=$('#camCanvas'),dx=dc.getContext('2d'),cx=cc.getContext('2d');
 const ds=$('#demoStatus'),cs=$('#camStatus'),df=$('#demoFps'),cf=$('#camFps'),live=$('#liveScore'),big=$('#scoreBig'),totalEl=$('#totalScore'),comboEl=$('#combo'),hitsEl=$('#hits'),meter=$('#meterFill'),msg=$('#message'),resultBox=$('#result'),finalScore=$('#finalScore'),finalDetail=$('#finalDetail'),difficulty=$('#difficulty'),thresholdText=$('#thresholdText'),scoreMode=$('#scoreMode'),readyState=$('#readyState');
-let demoPose=null,camPose=null,stream=null,demoLm=null,camLm=null,demoLoop=false,camLoop=false;let dCount=0,cCount=0,dMark=performance.now(),cMark=dMark;let total=0,combo=0,hits=0,lastAward=0,challenge=false,lastDemoTime=-1,lastCamTime=-1;
+let demoPose=null,camPose=null,stream=null,demoLm=null,camLm=null,demoLoop=false,camLoop=false;let dCount=0,cCount=0,dMark=performance.now(),cMark=dMark;let total=0,combo=0,hits=0,lastAward=0,challenge=false,lastDemoTime=-1,lastCamTime=-1;let currentRound=0,totalRounds=3;
 function fit(v,c){if(v.videoWidth&&v.videoHeight&&(c.width!==v.videoWidth||c.height!==v.videoHeight)){c.width=v.videoWidth;c.height=v.videoHeight}}
 function draw(result,c,ctx,color){ctx.clearRect(0,0,c.width,c.height);if(!result?.landmarks?.length)return null;const lm=result.landmarks[0],du=new DrawingUtils(ctx);du.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS,{color,lineWidth:4});du.drawLandmarks(lm,{color,radius:3});return lm}
 function angle(a,b,c){const x1=a.x-b.x,y1=a.y-b.y,x2=c.x-b.x,y2=c.y-b.y,m=Math.hypot(x1,y1)*Math.hypot(x2,y2);if(!m)return null;return Math.acos(Math.max(-1,Math.min(1,(x1*x2+y1*y2)/m)))*180/Math.PI}
-// 럭비 회피는 발목이 화면 밖이어도 채점 가능하도록 무릎까지의 각도를 사용
-const FULL_ANGLES=[[11,13,15],[12,14,16],[13,11,23],[14,12,24],[11,23,25],[12,24,26],[11,23,24],[12,24,23]];
+const FULL_ANGLES=[[11,13,15],[12,14,16],[13,11,23],[14,12,24],[11,23,25],[12,24,26],[23,25,27],[24,26,28],[11,23,24],[12,24,23]];
 const UPPER_ANGLES=[[11,13,15],[12,14,16],[13,11,23],[14,12,24],[11,23,24],[12,24,23]];
-// 럭비 회피용 전신 준비 판정: 발목은 필수에서 제외
-const FULL_REQUIRED=[11,12,13,14,15,16,23,24,25,26];
+const FULL_REQUIRED=[11,12,13,14,15,16,23,24,25,26,27,28];
 const UPPER_REQUIRED=[11,12,13,14,15,16,23,24];
 function jointVisible(lm,i){return !!lm?.[i] && (lm[i].visibility??1)>.30}
 function visible(lm,ids){return ids.every(i=>jointVisible(lm,i))}
+const RUGBY_CORE_REQUIRED=[11,12,23,24];
 function readiness(lm,mode){
   if(!lm)return {ok:false,text:'사람 찾는 중'};
-  const req=mode==='upper'?UPPER_REQUIRED:FULL_REQUIRED;
-  const count=req.filter(i=>jointVisible(lm,i)).length;
-  const ratio=count/req.length;
-  if(ratio>=.82)return {ok:true,text:'🟢 준비 완료'};
   if(mode==='full'){
-    const upper=UPPER_REQUIRED.filter(i=>jointVisible(lm,i)).length/UPPER_REQUIRED.length;
-    if(upper>=.75)return {ok:false,text:'🟡 뒤로 이동'};
+    const core=RUGBY_CORE_REQUIRED.filter(i=>jointVisible(lm,i)).length;
+    if(core===RUGBY_CORE_REQUIRED.length)return {ok:true,text:'🟢 채점 가능'};
+    return {ok:false,text:'🟡 상체와 골반이 보이게'};
   }
-  return {ok:false,text:'🟡 몸이 잘 보이게'};
+  const count=UPPER_REQUIRED.filter(i=>jointVisible(lm,i)).length;
+  if(count/UPPER_REQUIRED.length>=.75)return {ok:true,text:'🟢 채점 가능'};
+  return {ok:false,text:'🟡 상체와 양팔이 보이게'};
 }
 function similarity(A,B,mode){
   if(!A||!B)return null;
@@ -160,7 +158,7 @@ function similarity(A,B,mode){
     const x=angle(A[t[0]],A[t[1]],A[t[2]]),y=angle(B[t[0]],B[t[1]],B[t[2]]);
     if(x!=null&&y!=null)diffs.push(Math.abs(x-y));
   }
-  const minNeeded=mode==='upper'?3:4;
+  const minNeeded=3;
   if(diffs.length<minNeeded)return null;
   const mean=diffs.reduce((s,v)=>s+v,0)/diffs.length;
   return Math.max(0,Math.min(100,Math.round(100-mean/90*100)));
@@ -172,7 +170,7 @@ function updateScore(){
   if(!cReady.ok){
     readyState.textContent=cReady.text;
     live.textContent='--';big.textContent='--';meter.style.width='0%';
-    msg.textContent=mode==='full'?'🟡 머리부터 무릎까지 잘 보이도록 위치를 조정하세요.':'🟡 상체와 양팔이 화면에 잘 보이도록 위치를 조정하세요.';
+    msg.textContent=mode==='full'?'🟡 어깨와 골반이 화면에 보이도록 위치를 조정하세요. 무릎이 보이면 더 정확하게 채점됩니다.':'🟡 상체와 양팔이 화면에 잘 보이도록 위치를 조정하세요.';
     msg.className='message warn'; return;
   }
   if(!dReady.ok){
@@ -213,8 +211,32 @@ function runCam(){if(camLoop)return;camLoop=true;const tick=()=>{if(!camLoop)ret
 function runDemo(){if(demoLoop)return;demoLoop=true;const tick=()=>{if(!demoLoop)return;if(demoPose&&demo.readyState>=2&&!demo.paused&&!demo.ended){fit(demo,dc);if(demo.currentTime!==lastDemoTime){lastDemoTime=demo.currentTime;try{const r=demoPose.detectForVideo(demo,performance.now());demoLm=draw(r,dc,dx,'#ff5252');ds.textContent=demoLm?'🔴 시범 자세 추적 중':'사람을 찾는 중…';fps('d');updateScore()}catch(e){console.error('demo',e);ds.textContent='시범 영상 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 $('#videoFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;demo.src=URL.createObjectURL(f);ds.textContent='시범 영상 준비됨. 챌린지 시작을 눌러 주세요.';resetGame()});
 $('#cameraBtn').addEventListener('click',async()=>{try{if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false});cam.srcObject=stream;await cam.play();cs.textContent='카메라 연결됨 — 추적 시작';runCam()}catch(e){console.error(e);cs.textContent='카메라를 열 수 없습니다. 권한을 확인해 주세요.'}});
-$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='먼저 시범 영상을 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;demo.currentTime=0;lastDemoTime=-1;await demo.play();if(cam.paused)await cam.play();runDemo();runCam();msg.textContent='🏁 챌린지 시작! 시범 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
-demo.addEventListener('ended',()=>{if(!challenge)return;challenge=false;combo=0;comboEl.textContent='0';resultBox.classList.add('show');finalScore.textContent=total+'점';finalDetail.textContent=`성공 판정 ${hits}회 · 난이도 ${difficulty.options[difficulty.selectedIndex].text}`;msg.textContent='챌린지가 끝났습니다. 다시 도전하려면 챌린지 시작을 누르세요.';msg.className='message'});
+const roundBanner=$('#roundBanner');
+function showRound(n){
+  const labels=['','ROUND 1 · 동작 익히기','ROUND 2 · 빠르게 반응하기','FINAL ROUND · 끝까지 회피하기'];
+  if(roundBanner){roundBanner.textContent=labels[n]||'';roundBanner.style.display=n?'block':'none';}
+}
+async function playRound(){
+  demo.currentTime=0;lastDemoTime=-1;
+  await demo.play();
+  if(cam.paused)await cam.play();
+  runDemo();runCam();
+}
+$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='먼저 시범 영상을 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
+demo.addEventListener('ended',async()=>{if(!challenge)return;
+  if(currentRound<totalRounds){
+    currentRound++;showRound(currentRound);combo=0;comboEl.textContent='0';
+    msg.textContent=currentRound===2?'⚡ ROUND 2! 더 빠르게 반응해 보세요.':'🔥 FINAL ROUND! 끝까지 좌우로 회피하세요!';
+    msg.className='message ok';
+    await new Promise(r=>setTimeout(r,900));
+    try{await playRound()}catch(e){console.error(e)}
+    return;
+  }
+  challenge=false;combo=0;comboEl.textContent='0';showRound(0);
+  resultBox.classList.add('show');finalScore.textContent=total+'점';
+  finalDetail.textContent=`3라운드 완료 · 성공 판정 ${hits}회 · 난이도 ${difficulty.options[difficulty.selectedIndex].text}`;
+  msg.textContent='🏁 럭비 회피 챌린지 완료! 다시 도전하려면 챌린지 시작을 누르세요.';msg.className='message'
+});
 difficulty.addEventListener('change',()=>{thresholdText.textContent='성공 기준 '+difficulty.value+'점';resetGame()});
 scoreMode.addEventListener('change',()=>{resetGame();msg.textContent=scoreMode.value==='full'?'전신 채점: 머리부터 발끝까지 화면에 들어오게 서 주세요.':'상체 채점: 상체와 양팔이 화면에 잘 보이면 됩니다.';msg.className='message warn';updateScore()});
 $('#resetBtn').addEventListener('click',()=>{demo.pause();if(demo.src)demo.currentTime=0;demoLm=camLm=null;dx.clearRect(0,0,dc.width,dc.height);cx.clearRect(0,0,cc.width,cc.height);df.textContent='0 FPS';cf.textContent='0 FPS';resetGame();msg.textContent='초기화했습니다.';msg.className='message'});
@@ -227,7 +249,7 @@ $('#resetBtn').addEventListener('click',()=>{demo.pause();if(demo.src)demo.curre
    3) mode는 full(전신) 또는 upper(상체)
    ========================================================= */
 const EXERCISES = [
-  { id:"rugby", name:"럭비 회피 챌린지", file:"../rugby-dodge.mp4", mode:"full", note:"좌우 사이드스텝 · 무릎까지 전신 채점" },
+  { id:"rugby", name:"럭비 회피 챌린지", file:"../rugby-dodge.mp4", mode:"full", note:"좌우 사이드스텝 · 3라운드 챌린지" },
   { id:"custom",      name:"내 영상으로 테스트", file:"CUSTOM", mode:"full", note:"지금처럼 MP4를 직접 선택" }
 ];
 

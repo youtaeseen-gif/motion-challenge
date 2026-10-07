@@ -39,6 +39,10 @@
 .round-feedback-score{font-size:54px;font-weight:950;margin:8px 0}
 .round-feedback-msg{font-size:20px;line-height:1.5;color:#d9e1ec}
 
+
+/* 학생 화면: 거울모드. 영상과 MediaPipe 뼈대를 함께 좌우 반전 */
+#cam,#camCanvas{transform:scaleX(-1);transform-origin:center center}
+
 </style></head>
 <body>
 <section id="loginScreen" aria-label="학생 로그인">
@@ -55,7 +59,7 @@
 <p class="login-help">감일초등학교 AI 체육활동<br>선생님께 받은 아이디와 비밀번호로 로그인하세요.</p>
 </div>
 </section>
-<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 단계 통과형</span></div></header>
+<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">최종 · 거울모드 단계 통과형</span></div></header>
 <section class="exercise-section">
   <div class="exercise-title">🏃 ① 운동 고르기</div>
   <div id="exerciseGrid" class="exercise-grid"></div>
@@ -80,7 +84,7 @@
 <section class="panel"><h2>🔴 시범 영상</h2><div class="stage"><video id="demo" playsinline controls></video><canvas id="demoCanvas"></canvas></div><div class="status"><span id="demoStatus">시범 영상을 선택하세요.</span><span id="demoFps" class="fps">0 FPS</span></div></section>
 <section class="panel"><h2>🟢 나의 동작</h2><div class="stage"><video id="cam" playsinline muted></video><canvas id="camCanvas"></canvas></div><div class="status"><span id="camStatus">카메라를 시작하세요.</span><span id="camFps" class="fps">0 FPS</span></div></section>
 </div>
-<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 시범 캐릭터가 실제로 좌우 이동하는 순간에만 채점합니다. 가만히 있는 구간은 무채점이며, 같은 방향으로 실제 이동해야 점수를 받을 수 있습니다. 라운드를 성공해야 다음 단계로 올라갑니다.</div></section>
+<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 나의 동작 화면은 거울모드로 표시됩니다. 시범 캐릭터가 실제로 좌우 이동하는 순간에만 채점하며, 가만히 있는 구간은 무채점입니다. 화면에서 시범과 같은 방향으로 실제 이동해야 점수를 받을 수 있고, 라운드를 성공해야 다음 단계로 올라갑니다.</div></section>
 </main>
 <script type="module">
 const roundFeedback=document.getElementById('roundFeedback'),
@@ -266,7 +270,9 @@ function updateScore(){
   directionAttempts++;
 
   const demoDir=demoMove>0?1:-1;
-  const camDir=Math.abs(camMove)<CAM_MOVE_MIN?0:(camMove>0?1:-1);
+  // 카메라 화면은 거울모드이므로, 채점도 학생에게 보이는 방향 기준으로 반전한다.
+  const displayedCamMove=-camMove;
+  const camDir=Math.abs(displayedCamMove)<CAM_MOVE_MIN?0:(displayedCamMove>0?1:-1);
 
   // 가만히 있거나 반대 방향이면 해당 회피는 0점
   if(camDir===0){
@@ -340,7 +346,7 @@ demo.addEventListener('ended',async()=>{
   roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'다시 도전! 💪';
   roundFeedbackMsg.textContent=roundSuccess
     ? (thisRound<3?'좋아요! 다음 라운드로 올라갑니다.':'멋져요! FINAL ROUND까지 성공했습니다!')
-    : '아직 통과하지 못했어요. 같은 라운드에 다시 도전합니다!';
+    : '아직 통과하지 못했어요. 화면의 시범과 같은 방향으로 움직이며 같은 라운드에 다시 도전해요!';
   roundFeedback.classList.add('show');
 
   await new Promise(r=>setTimeout(r,2200));

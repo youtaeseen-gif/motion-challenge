@@ -25,6 +25,20 @@
 #appShell{display:none}.student-chip{display:none;font-size:12px;background:#173328;color:#8cf0bf;padding:7px 10px;border-radius:999px;white-space:nowrap}
 @media(max-width:700px){.login-card{padding:26px 22px}.login-card h1{font-size:25px}.login-input,.login-btn{font-size:17px}}
 
+
+.round-feedback{
+  position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;
+  background:rgba(5,8,12,.78);backdrop-filter:blur(3px)
+}
+.round-feedback.show{display:flex}
+.round-feedback-card{
+  width:min(520px,88vw);background:#171b22;border:1px solid #3b4452;border-radius:24px;
+  padding:34px 28px;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.45)
+}
+.round-feedback-title{font-size:34px;font-weight:900;margin-bottom:12px}
+.round-feedback-score{font-size:54px;font-weight:950;margin:8px 0}
+.round-feedback-msg{font-size:20px;line-height:1.5;color:#d9e1ec}
+
 </style></head>
 <body>
 <section id="loginScreen" aria-label="학생 로그인">
@@ -41,7 +55,7 @@
 <p class="login-help">감일초등학교 AI 체육활동<br>선생님께 받은 아이디와 비밀번호로 로그인하세요.</p>
 </div>
 </section>
-<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 실제이동 채점</span></div></header>
+<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 3라운드 성공판정</span></div></header>
 <section class="exercise-section">
   <div class="exercise-title">🏃 ① 운동 고르기</div>
   <div id="exerciseGrid" class="exercise-grid"></div>
@@ -69,6 +83,11 @@
 <section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 시범 캐릭터가 실제로 좌우 이동하는 순간에만 채점합니다. 가만히 있는 구간은 무채점이며, 학생도 같은 방향으로 실제 이동해야 점수를 받을 수 있습니다.</div></section>
 </main>
 <script type="module">
+const roundFeedback=document.getElementById('roundFeedback'),
+      roundFeedbackTitle=document.getElementById('roundFeedbackTitle'),
+      roundFeedbackScore=document.getElementById('roundFeedbackScore'),
+      roundFeedbackMsg=document.getElementById('roundFeedbackMsg');
+
 /* v5.1: Firebase Authentication 실제 로그인 */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
@@ -127,7 +146,7 @@ studentPwV5.addEventListener('keydown',e=>{if(e.key==='Enter')enterAppV5();});
 import {FilesetResolver,PoseLandmarker,DrawingUtils} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/+esm';
 const $=s=>document.querySelector(s),demo=$('#demo'),cam=$('#cam'),dc=$('#demoCanvas'),cc=$('#camCanvas'),dx=dc.getContext('2d'),cx=cc.getContext('2d');
 const ds=$('#demoStatus'),cs=$('#camStatus'),df=$('#demoFps'),cf=$('#camFps'),live=$('#liveScore'),big=$('#scoreBig'),totalEl=$('#totalScore'),comboEl=$('#combo'),hitsEl=$('#hits'),meter=$('#meterFill'),msg=$('#message'),resultBox=$('#result'),finalScore=$('#finalScore'),finalDetail=$('#finalDetail'),difficulty=$('#difficulty'),thresholdText=$('#thresholdText'),scoreMode=$('#scoreMode'),readyState=$('#readyState');
-let demoPose=null,camPose=null,stream=null,demoLm=null,camLm=null,demoLoop=false,camLoop=false;let dCount=0,cCount=0,dMark=performance.now(),cMark=dMark;let total=0,combo=0,hits=0,lastAward=0,challenge=false,lastDemoTime=-1,lastCamTime=-1;let currentRound=0,totalRounds=3;let directionAttempts=0,directionSuccess=0,lastDemoDir=0,maxCombo=0;let prevDemoHipX=null,prevCamHipX=null,lastMotionCheck=0,motionQualitySum=0;
+let demoPose=null,camPose=null,stream=null,demoLm=null,camLm=null,demoLoop=false,camLoop=false;let dCount=0,cCount=0,dMark=performance.now(),cMark=dMark;let total=0,combo=0,hits=0,lastAward=0,challenge=false,lastDemoTime=-1,lastCamTime=-1;let currentRound=0,totalRounds=3;let directionAttempts=0,directionSuccess=0,lastDemoDir=0,maxCombo=0;let prevDemoHipX=null,prevCamHipX=null,lastMotionCheck=0,motionQualitySum=0;let scoringActive=false;let roundStartTotal=0,roundStartHits=0,roundResults=[];
 function fit(v,c){if(v.videoWidth&&v.videoHeight&&(c.width!==v.videoWidth||c.height!==v.videoHeight)){c.width=v.videoWidth;c.height=v.videoHeight}}
 function draw(result,c,ctx,color){ctx.clearRect(0,0,c.width,c.height);if(!result?.landmarks?.length)return null;const lm=result.landmarks[0],du=new DrawingUtils(ctx);du.drawConnectors(lm,PoseLandmarker.POSE_CONNECTIONS,{color,lineWidth:4});du.drawLandmarks(lm,{color,radius:3});return lm}
 function angle(a,b,c){const x1=a.x-b.x,y1=a.y-b.y,x2=c.x-b.x,y2=c.y-b.y,m=Math.hypot(x1,y1)*Math.hypot(x2,y2);if(!m)return null;return Math.acos(Math.max(-1,Math.min(1,(x1*x2+y1*y2)/m)))*180/Math.PI}
@@ -174,7 +193,7 @@ function similarity(A,B,mode){
   }
   return Math.round(score);
 }
-function resetGame(){total=0;combo=0;hits=0;lastAward=0;challenge=false;directionAttempts=0;directionSuccess=0;lastDemoDir=0;maxCombo=0;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;motionQualitySum=0;totalEl.textContent='0';comboEl.textContent='0';hitsEl.textContent='0';live.textContent='--';big.textContent='--';meter.style.width='0%';resultBox.classList.remove('show');readyState.textContent='확인 중'}
+function resetGame(){total=0;combo=0;hits=0;lastAward=0;challenge=false;directionAttempts=0;directionSuccess=0;lastDemoDir=0;maxCombo=0;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;motionQualitySum=0;scoringActive=false;roundStartTotal=0;roundStartHits=0;roundResults=[];totalEl.textContent='0';comboEl.textContent='0';hitsEl.textContent='0';live.textContent='--';big.textContent='--';meter.style.width='0%';resultBox.classList.remove('show');readyState.textContent='확인 중'}
 function updateScore(){
   const mode=scoreMode.value;
   const dReady=readiness(demoLm,mode),cReady=readiness(camLm,mode);
@@ -220,8 +239,8 @@ function updateScore(){
 
   // 시범 캐릭터가 충분히 좌우 이동하지 않은 구간은 아예 채점하지 않는다.
   // 즉, 시작/중간의 정지 자세로는 점수가 절대 올라가지 않는다.
-  const DEMO_MOVE_MIN=.010;
-  const CAM_MOVE_MIN=.007;
+  const DEMO_MOVE_MIN=.022;
+  const CAM_MOVE_MIN=.018;
 
   if(Math.abs(demoMove)<DEMO_MOVE_MIN){
     live.textContent='--';big.textContent='대기';
@@ -235,6 +254,13 @@ function updateScore(){
     live.textContent='--';big.textContent='--';meter.style.width='0%';
     msg.textContent='🟢 준비 완료! 챌린지 시작을 눌러 주세요.';
     msg.className='message ok';return;
+  }
+
+  // 영상이 멈췄거나 라운드 전환 중이면 절대 채점하지 않는다.
+  if(!scoringActive || demo.paused || demo.ended || !Number.isFinite(demo.duration) || demo.currentTime>=demo.duration-.18){
+    live.textContent='--';big.textContent='대기';meter.style.width='0%';
+    msg.textContent='⏳ 다음 회피 동작을 준비하세요.';
+    msg.className='message';return;
   }
 
   directionAttempts++;
@@ -292,83 +318,73 @@ function showRound(n){
   if(roundBanner){roundBanner.textContent=labels[n]||'';roundBanner.style.display=n?'block':'none';}
 }
 async function playRound(){
-  demo.currentTime=0;lastDemoTime=-1;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;
+  scoringActive=false;demo.currentTime=0;lastDemoTime=-1;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;demoLm=null;
   await demo.play();
+  scoringActive=true;
   if(cam.paused)await cam.play();
   runDemo();runCam();
 }
-$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='먼저 시범 영상을 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
-demo.addEventListener('ended',async()=>{if(!challenge)return;
+$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='먼저 시범 영상을 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
+demo.addEventListener('ended',async()=>{
+  scoringActive=false;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;demoLm=null;
+  if(!challenge)return;
+
+  const thisRound=currentRound;
+  const roundPoints=Math.max(0,total-roundStartTotal);
+  const roundHits=Math.max(0,hits-roundStartHits);
+
+  // 공개수업용 라운드 판정: 60점 만점 감각으로 환산.
+  // 성공 판정이 최소 3회 이상 있고, 라운드 획득점수가 18점 이상이면 성공.
+  const roundSuccess=(roundHits>=3 && roundPoints>=18);
+  roundResults.push({round:thisRound,success:roundSuccess,points:roundPoints,hits:roundHits});
+
+  roundFeedbackTitle.textContent=thisRound<3?`ROUND ${thisRound}`:'FINAL ROUND';
+  roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'아쉬워요! 💪';
+  roundFeedbackMsg.textContent=roundSuccess
+    ? '방향을 잘 보고 피했어요! 다음 라운드도 도전!'
+    : '괜찮아요! 다음 라운드에서는 방향을 보고 더 크게 움직여 보세요.';
+  roundFeedback.classList.add('show');
+
+  // 성공/실패와 관계없이 2초 뒤 다음 라운드로 진행
+  await new Promise(r=>setTimeout(r,2000));
+  roundFeedback.classList.remove('show');
+
   if(currentRound<totalRounds){
-    currentRound++;showRound(currentRound);combo=0;comboEl.textContent='0';
-    msg.textContent=currentRound===2?'⚡ ROUND 2! 더 빠르게 반응해 보세요.':'🔥 FINAL ROUND! 끝까지 좌우로 회피하세요!';
-    msg.className='message ok';
-    await new Promise(r=>setTimeout(r,900));
-    try{await playRound()}catch(e){console.error(e)}
+    currentRound++;
+    roundStartTotal=total;roundStartHits=hits;
+    showRound(currentRound);
+    combo=0;comboEl.textContent='0';
+    live.textContent='--';big.textContent='대기';meter.style.width='0%';
+    await new Promise(r=>setTimeout(r,500));
+    playRound();
     return;
   }
-  challenge=false;combo=0;comboEl.textContent='0';showRound(0);
-  resultBox.classList.add('show');
+
+  challenge=false;scoringActive=false;combo=0;comboEl.textContent='0';showRound(0);
+
   const dirRate=directionAttempts?directionSuccess/directionAttempts:0;
-  const poseRate=Math.min(1,hits/42);
-  const final100=Math.round((dirRate*.65+poseRate*.35)*100);
+  const avgPose=directionSuccess?motionQualitySum/directionSuccess:0;
+  const final100=Math.max(0,Math.min(100,Math.round((dirRate*.70+(avgPose/100)*.30)*100)));
+  const successRounds=roundResults.filter(r=>r.success).length;
   finalScore.textContent=final100+'점 / 100점';
-  const praise=final100>=90?'🏆 회피왕!':final100>=80?'⭐ 멋진 회피!':final100>=65?'👍 좋아요! 한 번 더!':'💪 방향을 보고 다시 도전!';
-  finalDetail.textContent=`${praise} · 실제 회피 방향 성공 ${directionSuccess}/${directionAttempts}회 · 최고 콤보 ${maxCombo}회 · 3라운드 완료`;
-  msg.textContent='🏁 럭비 회피 챌린지 완료! 다시 도전하려면 챌린지 시작을 누르세요.';msg.className='message'
+
+  let praise='💪 다시 도전!';
+  if(successRounds===3) praise='🏆 3라운드 모두 성공!';
+  else if(successRounds===2) praise='⭐ 2라운드 성공!';
+  else if(successRounds===1) praise='👍 1라운드 성공!';
+
+  finalDetail.textContent=`${praise} · 라운드 성공 ${successRounds}/3 · 실제 회피 방향 성공 ${directionSuccess}/${directionAttempts}회 · 최고 콤보 ${maxCombo}회`;
+  resultBox.classList.add('show');
+  msg.textContent='🏁 3라운드 챌린지가 끝났습니다.';
+  msg.className='message ok';
 });
-difficulty.addEventListener('change',()=>{thresholdText.textContent='성공 기준 '+difficulty.value+'점';resetGame()});
-scoreMode.addEventListener('change',()=>{resetGame();msg.textContent=scoreMode.value==='full'?'전신 채점: 머리부터 발끝까지 화면에 들어오게 서 주세요.':'상체 채점: 상체와 양팔이 화면에 잘 보이면 됩니다.';msg.className='message warn';updateScore()});
-$('#resetBtn').addEventListener('click',()=>{demo.pause();if(demo.src)demo.currentTime=0;demoLm=camLm=null;dx.clearRect(0,0,dc.width,dc.height);cx.clearRect(0,0,cc.width,cc.height);df.textContent='0 FPS';cf.textContent='0 FPS';resetGame();msg.textContent='초기화했습니다.';msg.className='message'});
+</script></div>
+<div id="roundFeedback" class="round-feedback">
+  <div class="round-feedback-card">
+    <div id="roundFeedbackTitle" class="round-feedback-title">ROUND 1</div>
+    <div id="roundFeedbackScore" class="round-feedback-score">성공! ⭐</div>
+    <div id="roundFeedbackMsg" class="round-feedback-msg">방향을 잘 보고 피했어요!</div>
+  </div>
+</div>
 
-/* =========================================================
-   v4 운동 목록 설정
-   나중에 선생님이 수정할 곳은 아래 EXERCISES 배열입니다.
-   1) videos 폴더에 MP4 업로드
-   2) 아래 file에 파일명 입력
-   3) mode는 full(전신) 또는 upper(상체)
-   ========================================================= */
-const EXERCISES = [
-  { id:"rugby", name:"럭비 회피 챌린지", file:"../rugby-dodge.mp4", mode:"full", note:"좌우 사이드스텝 · 3라운드 챌린지" },
-  { id:"custom",      name:"내 영상으로 테스트", file:"CUSTOM", mode:"full", note:"지금처럼 MP4를 직접 선택" }
-];
-
-const exerciseGrid = document.getElementById("exerciseGrid");
-const selectedExercise = document.getElementById("selectedExercise");
-
-function renderExercises(){
-  if(!exerciseGrid) return;
-  exerciseGrid.innerHTML="";
-  EXERCISES.forEach(ex=>{
-    const btn=document.createElement("button");
-    btn.className="exercise-card"+(!ex.file && ex.file!=="CUSTOM"?" exercise-empty":"");
-    btn.type="button";
-    btn.innerHTML=`<b>${ex.file==="CUSTOM"?"🧪":(!ex.file?"🎬":"▶️")} ${ex.name}</b><span>${ex.note}</span>`;
-    btn.addEventListener("click",()=>{
-      if(!ex.file){
-        if(selectedExercise) selectedExercise.textContent=`${ex.name}: 아직 시범영상이 등록되지 않았습니다.`;
-        return;
-      }
-      document.querySelectorAll(".exercise-card").forEach(x=>x.classList.remove("active"));
-      btn.classList.add("active");
-      if(scoreMode){
-        scoreMode.value=ex.mode;
-        scoreMode.dispatchEvent(new Event("change"));
-      }
-      if(ex.file==="CUSTOM"){
-        if(selectedExercise) selectedExercise.textContent="선택된 운동: 내 영상으로 테스트";
-        const fi=document.querySelector('input[type="file"]'); if(fi) fi.click();
-        return;
-      }
-      const url=ex.file.startsWith("../") ? ex.file.slice(3) : `videos/${ex.file}`;
-      const dv=document.querySelector("video");
-      if(dv){ dv.src=url; dv.load(); }
-      if(selectedExercise) selectedExercise.textContent=`선택된 운동: ${ex.name} · ${ex.mode==="full"?"전신 채점":"상체 채점"}`;
-      if(typeof resetGame==="function") resetGame();
-    });
-    exerciseGrid.appendChild(btn);
-  });
-}
-renderExercises();
-
-</script></div></body></html>
+</body></html>

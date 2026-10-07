@@ -225,9 +225,7 @@ $('#resetBtn').addEventListener('click',()=>{demo.pause();if(demo.src)demo.curre
    3) mode는 full(전신) 또는 upper(상체)
    ========================================================= */
 const EXERCISES = [
-  { id:"jumpingjack", name:"팔벌려뛰기", file:"", mode:"full", note:"전신 운동 · 영상 준비 중" },
-  { id:"squat",       name:"스쿼트",     file:"", mode:"full", note:"하체 운동 · 영상 준비 중" },
-  { id:"stretch",     name:"상체 스트레칭", file:"", mode:"upper", note:"상체 운동 · 영상 준비 중" },
+  { id:"rugby", name:"럭비 회피 챌린지", file:"../rugby-dodge.mp4", mode:"full", note:"좌우 사이드스텝 · 전신 채점" },
   { id:"custom",      name:"내 영상으로 테스트", file:"CUSTOM", mode:"full", note:"지금처럼 MP4를 직접 선택" }
 ];
 
@@ -258,7 +256,7 @@ function renderExercises(){
         const fi=document.querySelector('input[type="file"]'); if(fi) fi.click();
         return;
       }
-      const url=`videos/${ex.file}`;
+      const url=ex.file.startsWith("../") ? ex.file.slice(3) : `videos/${ex.file}`;
       const dv=document.querySelector("video");
       if(dv){ dv.src=url; dv.load(); }
       if(selectedExercise) selectedExercise.textContent=`선택된 운동: ${ex.name} · ${ex.mode==="full"?"전신 채점":"상체 채점"}`;

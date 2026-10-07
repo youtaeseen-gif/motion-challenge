@@ -85,6 +85,14 @@
 </div>
 <section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 나의 동작 화면은 거울모드입니다. 화면에서 시범 캐릭터와 같은 방향으로 실제 회피해야 점수를 받을 수 있습니다. 정지 구간은 채점하지 않으며, 라운드를 성공해야 다음 단계로 올라갑니다.</div></section>
 </main>
+<div id="roundFeedback" class="round-feedback">
+  <div class="round-feedback-card">
+    <div id="roundFeedbackTitle" class="round-feedback-title">ROUND 1</div>
+    <div id="roundFeedbackScore" class="round-feedback-score">성공! ⭐</div>
+    <div id="roundFeedbackMsg" class="round-feedback-msg">방향을 잘 보고 피했어요!</div>
+  </div>
+</div>
+
 <script type="module">
 const roundFeedback=document.getElementById('roundFeedback'),
       roundFeedbackTitle=document.getElementById('roundFeedbackTitle'),
@@ -322,6 +330,12 @@ const EXERCISES=[
     name:'🏉 럭비 회피 챌린지',
     file:'rugby-dodge.mp4',
     note:'좌우 사이드스텝 · 성공해야 다음 라운드'
+  },
+  {
+    id:'custom',
+    name:'🎬 내 영상으로 테스트',
+    file:'CUSTOM',
+    note:'내 MP4 영상을 직접 선택해서 체험하기'
   }
 ];
 
@@ -339,9 +353,17 @@ function renderExercises(){
     card.addEventListener('click',()=>{
       document.querySelectorAll('.exercise-card').forEach(c=>c.classList.remove('active'));
       card.classList.add('active');
+      resetGame();
+      if(ex.file==='CUSTOM'){
+        selectedExercise.textContent='선택된 운동: 내 영상으로 테스트';
+        ds.textContent='🎬 사용할 MP4 영상을 선택해 주세요.';
+        msg.textContent='내 영상 파일을 선택하면 시범 영상에 바로 표시됩니다.';
+        msg.className='message';
+        document.getElementById('videoFile').click();
+        return;
+      }
       demo.src=ex.file;
       demo.load();
-      resetGame();
       selectedExercise.textContent='선택된 운동: '+ex.name.replace('🏉 ','');
       ds.textContent='🏉 럭비 회피 시범 영상 준비됨. 카메라를 시작하세요.';
       msg.textContent='운동 선택 완료! ② 카메라 시작을 눌러 주세요.';
@@ -354,7 +376,19 @@ renderExercises();
 
 function runCam(){if(camLoop)return;camLoop=true;const tick=()=>{if(!camLoop)return;if(camPose&&cam.readyState>=2&&!cam.paused){fit(cam,cc);if(cam.currentTime!==lastCamTime){lastCamTime=cam.currentTime;try{const r=camPose.detectForVideo(cam,performance.now());camLm=draw(r,cc,cx,'#22e6a8');cs.textContent=camLm?'🟢 실시간 추적 중':'사람을 찾는 중…';fps('c');updateScore()}catch(e){console.error('cam',e);cs.textContent='웹캠 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 function runDemo(){if(demoLoop)return;demoLoop=true;const tick=()=>{if(!demoLoop)return;if(demoPose&&demo.readyState>=2&&!demo.paused&&!demo.ended){fit(demo,dc);if(demo.currentTime!==lastDemoTime){lastDemoTime=demo.currentTime;try{const r=demoPose.detectForVideo(demo,performance.now());demoLm=draw(r,dc,dx,'#ff5252');ds.textContent=demoLm?'🔴 시범 자세 추적 중':'사람을 찾는 중…';fps('d');updateScore()}catch(e){console.error('demo',e);ds.textContent='시범 영상 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
-$('#videoFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;demo.src=URL.createObjectURL(f);ds.textContent='시범 영상 준비됨. 챌린지 시작을 눌러 주세요.';resetGame()});
+$('#videoFile').addEventListener('change',e=>{
+  const f=e.target.files?.[0];
+  if(!f)return;
+  demo.src=URL.createObjectURL(f);
+  demo.load();
+  resetGame();
+  document.querySelectorAll('.exercise-card').forEach(c=>c.classList.toggle('active',c.dataset.exercise==='custom'));
+  selectedExercise.textContent='선택된 운동: 내 영상으로 테스트 · '+f.name;
+  ds.textContent='🎬 내 시범 영상 준비됨. 카메라를 시작하세요.';
+  msg.textContent='영상 선택 완료! ② 카메라 시작을 눌러 주세요.';
+  msg.className='message ok';
+  e.target.value='';
+});
 $('#cameraBtn').addEventListener('click',async()=>{try{if(stream)stream.getTracks().forEach(t=>t.stop());stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false});cam.srcObject=stream;await cam.play();cs.textContent='카메라 연결됨 — 추적 시작';runCam()}catch(e){console.error(e);cs.textContent='카메라를 열 수 없습니다. 권한을 확인해 주세요.'}});
 const roundBanner=$('#roundBanner');
 function showRound(n){
@@ -368,7 +402,7 @@ async function playRound(){
   if(cam.paused)await cam.play();
   runDemo();runCam();
 }
-$('#playBtn').addEventListener('click',async()=>{if(!demo.getAttribute('src')){ds.textContent='먼저 ① 럭비 회피 챌린지를 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
+$('#playBtn').addEventListener('click',async()=>{if(!demo.getAttribute('src')){ds.textContent='먼저 ① 운동을 선택하고 시범 영상을 준비하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
 demo.addEventListener('ended',async()=>{
   scoringActive=false;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;demoLm=null;
   if(!challenge)return;
@@ -380,15 +414,18 @@ demo.addEventListener('ended',async()=>{
   // 라운드 통과 기준: 실제 성공 판정 3회 이상 + 획득점수 18점 이상
   const roundSuccess=(roundHits>=3 && roundPoints>=18);
 
-  roundFeedbackTitle.textContent=thisRound<3?`ROUND ${thisRound}`:'FINAL ROUND';
-  roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'다시 도전! 💪';
-  roundFeedbackMsg.textContent=roundSuccess
-    ? (thisRound<3?'좋아요! 다음 라운드로 올라갑니다.':'멋져요! FINAL ROUND까지 성공했습니다!')
-    : '아직 통과하지 못했어요. 같은 라운드에 다시 도전합니다!';
-  roundFeedback.classList.add('show');
-
-  await new Promise(r=>setTimeout(r,2200));
-  roundFeedback.classList.remove('show');
+  if(roundFeedback){
+    roundFeedbackTitle.textContent=thisRound<3?`ROUND ${thisRound}`:'FINAL ROUND';
+    roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'다시 도전! 💪';
+    roundFeedbackMsg.textContent=roundSuccess
+      ? (thisRound<3?'좋아요! 다음 라운드로 올라갑니다.':'멋져요! FINAL ROUND까지 성공했습니다!')
+      : '아직 통과하지 못했어요. 같은 라운드에 다시 도전합니다!';
+    roundFeedback.classList.add('show');
+    await new Promise(r=>setTimeout(r,2200));
+    roundFeedback.classList.remove('show');
+  }else{
+    await new Promise(r=>setTimeout(r,700));
+  }
 
   if(!roundSuccess){
     // 실패 기록은 전체 최종 결과에 쌓지 않고 같은 라운드를 다시 시작
@@ -427,12 +464,5 @@ demo.addEventListener('ended',async()=>{
   msg.className='message ok';
 });
 </script></div>
-<div id="roundFeedback" class="round-feedback">
-  <div class="round-feedback-card">
-    <div id="roundFeedbackTitle" class="round-feedback-title">ROUND 1</div>
-    <div id="roundFeedbackScore" class="round-feedback-score">성공! ⭐</div>
-    <div id="roundFeedbackMsg" class="round-feedback-msg">방향을 잘 보고 피했어요!</div>
-  </div>
-</div>
 
 </body></html>

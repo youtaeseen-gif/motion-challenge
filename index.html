@@ -3,7 +3,7 @@
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0d0f13;color:#fff;font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif}header{padding:14px 20px;border-bottom:1px solid #30343d;display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:20px;margin:0}.badge{font-size:12px;background:#242933;padding:7px 10px;border-radius:999px;white-space:nowrap}main{max-width:1500px;margin:auto;padding:16px}.controls{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:13px}button,.file,select{border:0;border-radius:10px;padding:11px 14px;font-weight:750;font-size:14px}.file,button{cursor:pointer}.file,.secondary,select{background:#292e37;color:#fff}.primary{background:#4c8bf5;color:#fff}.danger{background:#453039;color:#fff}input[type=file]{display:none}.hud{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:13px}.stat{background:#171a20;border:1px solid #30343d;border-radius:14px;padding:12px 14px}.stat span{font-size:12px;color:#aeb7c6}.stat strong{display:block;font-size:27px;margin-top:3px;font-variant-numeric:tabular-nums}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{background:#17191e;border:1px solid #30343d;border-radius:15px;overflow:hidden}.panel h2{font-size:16px;margin:0;padding:12px 14px;border-bottom:1px solid #30343d}.stage{position:relative;background:#050505;aspect-ratio:16/10}.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.stage canvas{pointer-events:none}.status{padding:9px 13px;font-size:13px;color:#d2d7df;display:flex;justify-content:space-between;gap:8px}.fps{font-variant-numeric:tabular-nums;color:#91a2ba}.bottom{margin-top:14px;background:#17191e;border:1px solid #30343d;border-radius:15px;padding:15px}.meterRow{display:flex;align-items:center;gap:15px}.meterWrap{flex:1;min-width:0}.meterHead{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}.meter{height:18px;background:#2a3039;border-radius:999px;overflow:hidden}.meter>div{height:100%;width:0;background:linear-gradient(90deg,#4c8bf5,#38d996);transition:width .12s linear}.bigScore{font-size:40px;font-weight:900;min-width:105px;text-align:right;font-variant-numeric:tabular-nums}.message{margin-top:11px;font-size:14px;color:#c6ceda}.ok{color:#45e39a}.warn{color:#ffcf6b}.result{display:none;margin-top:14px;padding:15px;border:1px solid #3b4654;border-radius:13px;background:#20242b}.result.show{display:block}.result strong{font-size:32px}.small{font-size:12px;color:#aeb7c6;line-height:1.55;margin-top:10px}@media(max-width:900px){.grid{grid-template-columns:1fr}.hud{grid-template-columns:1fr 1fr}.meterRow{align-items:flex-start;flex-direction:column}.bigScore{text-align:left}}@media(max-width:500px){.hud{grid-template-columns:1fr 1fr}.stat strong{font-size:22px}}
 
-.exercise-section{display:none!important}
+.exercise-section{max-width:1180px;margin:0 auto 18px;padding:0 16px}
 .exercise-title{font-weight:900;font-size:20px;margin:8px 0 10px}
 .exercise-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .exercise-card{border:2px solid #e5e7eb;border-radius:16px;padding:14px;background:#fff;cursor:pointer;text-align:left;min-height:92px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
@@ -11,7 +11,7 @@
 .exercise-card b{display:block;font-size:17px;margin-bottom:5px}
 .exercise-card span{font-size:13px;color:#64748b}
 .exercise-empty{border-style:dashed;color:#64748b;cursor:default}
-.selected-exercise{display:none!important}
+.selected-exercise{max-width:1180px;margin:0 auto 12px;padding:0 16px;font-weight:800}
 @media(max-width:800px){.exercise-grid{grid-template-columns:repeat(2,1fr)}}
 
 
@@ -58,12 +58,12 @@
 <p class="login-help">감일초등학교 AI 체육활동<br>선생님께 받은 아이디와 비밀번호로 로그인하세요.</p>
 </div>
 </section>
-<div id="appShell"><header><h1>🏉 감일초 럭비 회피 챌린지</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 럭비 회피 챌린지</span></div></header>
+<div id="appShell"><header><h1>🏉 감일초 럭비 회피 챌린지</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 운동 선택형</span></div></header>
 <section class="exercise-section">
   <div class="exercise-title">🏃 ① 운동 고르기</div>
   <div id="exerciseGrid" class="exercise-grid"></div>
 </section>
-<div class="selected-exercise" id="selectedExercise">선택된 운동: 임시 영상 직접 선택</div>
+<div class="selected-exercise" id="selectedExercise">선택된 운동: 아직 선택하지 않았어요.</div>
 <main>
 <div class="controls">
 <label class="file" style="display:none">테스트용 영상 직접 선택<input id="videoFile" type="file" accept="video/*"></label>
@@ -315,15 +315,42 @@ async function init(){try{const vision=await FilesetResolver.forVisionTasks('htt
 
 init();
 
-/* 공개수업용: 럭비 시범 영상을 자동으로 불러온다. */
-function loadRugbyDemo(){
-  demo.src='rugby-dodge.mp4';
-  demo.load();
-  ds.textContent='🏉 럭비 회피 시범 영상 준비됨';
-  const selected=document.getElementById('selectedExercise');
-  if(selected) selected.textContent='선택된 운동: 럭비 회피 챌린지';
+/* 운동 선택: 업로드된 영상 파일과 운동 카드를 연결한다. */
+const EXERCISES=[
+  {
+    id:'rugby',
+    name:'🏉 럭비 회피 챌린지',
+    file:'rugby-dodge.mp4',
+    note:'좌우 사이드스텝 · 성공해야 다음 라운드'
+  }
+];
+
+const exerciseGrid=document.getElementById('exerciseGrid');
+const selectedExercise=document.getElementById('selectedExercise');
+
+function renderExercises(){
+  exerciseGrid.innerHTML='';
+  EXERCISES.forEach(ex=>{
+    const card=document.createElement('button');
+    card.type='button';
+    card.className='exercise-card';
+    card.dataset.exercise=ex.id;
+    card.innerHTML=`<b>${ex.name}</b><span>${ex.note}</span>`;
+    card.addEventListener('click',()=>{
+      document.querySelectorAll('.exercise-card').forEach(c=>c.classList.remove('active'));
+      card.classList.add('active');
+      demo.src=ex.file;
+      demo.load();
+      resetGame();
+      selectedExercise.textContent='선택된 운동: '+ex.name.replace('🏉 ','');
+      ds.textContent='🏉 럭비 회피 시범 영상 준비됨. 카메라를 시작하세요.';
+      msg.textContent='운동 선택 완료! ② 카메라 시작을 눌러 주세요.';
+      msg.className='message ok';
+    });
+    exerciseGrid.appendChild(card);
+  });
 }
-loadRugbyDemo();
+renderExercises();
 
 function runCam(){if(camLoop)return;camLoop=true;const tick=()=>{if(!camLoop)return;if(camPose&&cam.readyState>=2&&!cam.paused){fit(cam,cc);if(cam.currentTime!==lastCamTime){lastCamTime=cam.currentTime;try{const r=camPose.detectForVideo(cam,performance.now());camLm=draw(r,cc,cx,'#22e6a8');cs.textContent=camLm?'🟢 실시간 추적 중':'사람을 찾는 중…';fps('c');updateScore()}catch(e){console.error('cam',e);cs.textContent='웹캠 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
 function runDemo(){if(demoLoop)return;demoLoop=true;const tick=()=>{if(!demoLoop)return;if(demoPose&&demo.readyState>=2&&!demo.paused&&!demo.ended){fit(demo,dc);if(demo.currentTime!==lastDemoTime){lastDemoTime=demo.currentTime;try{const r=demoPose.detectForVideo(demo,performance.now());demoLm=draw(r,dc,dx,'#ff5252');ds.textContent=demoLm?'🔴 시범 자세 추적 중':'사람을 찾는 중…';fps('d');updateScore()}catch(e){console.error('demo',e);ds.textContent='시범 영상 분석 오류'}}}requestAnimationFrame(tick)};requestAnimationFrame(tick)}
@@ -341,7 +368,7 @@ async function playRound(){
   if(cam.paused)await cam.play();
   runDemo();runCam();
 }
-$('#playBtn').addEventListener('click',async()=>{if(!demo.src){ds.textContent='럭비 시범 영상을 불러오는 중입니다. 잠시 후 다시 눌러 주세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
+$('#playBtn').addEventListener('click',async()=>{if(!demo.getAttribute('src')){ds.textContent='먼저 ① 럭비 회피 챌린지를 선택하세요.';return}if(!stream){cs.textContent='먼저 카메라를 시작하세요.';return}try{resetGame();challenge=true;currentRound=1;roundStartTotal=total;roundStartHits=hits;showRound(currentRound);await playRound();msg.textContent='🏉 ROUND 1 시작! 좌우 회피 동작을 따라 해 보세요.';msg.className='message ok'}catch(e){console.error(e);ds.textContent='영상 재생 오류'}});
 demo.addEventListener('ended',async()=>{
   scoringActive=false;prevDemoHipX=null;prevCamHipX=null;lastMotionCheck=0;demoLm=null;
   if(!challenge)return;

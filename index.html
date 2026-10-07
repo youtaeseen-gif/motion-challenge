@@ -55,7 +55,7 @@
 <p class="login-help">감일초등학교 AI 체육활동<br>선생님께 받은 아이디와 비밀번호로 로그인하세요.</p>
 </div>
 </section>
-<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 3라운드 성공판정</span></div></header>
+<div id="appShell"><header><h1>🏃 모션 챌린지 — 영상 따라하기</h1><div style="display:flex;gap:8px;align-items:center"><span id="studentChip" class="student-chip"></span><span class="badge">공개수업 · 단계 통과형</span></div></header>
 <section class="exercise-section">
   <div class="exercise-title">🏃 ① 운동 고르기</div>
   <div id="exerciseGrid" class="exercise-grid"></div>
@@ -80,7 +80,7 @@
 <section class="panel"><h2>🔴 시범 영상</h2><div class="stage"><video id="demo" playsinline controls></video><canvas id="demoCanvas"></canvas></div><div class="status"><span id="demoStatus">시범 영상을 선택하세요.</span><span id="demoFps" class="fps">0 FPS</span></div></section>
 <section class="panel"><h2>🟢 나의 동작</h2><div class="stage"><video id="cam" playsinline muted></video><canvas id="camCanvas"></canvas></div><div class="status"><span id="camStatus">카메라를 시작하세요.</span><span id="camFps" class="fps">0 FPS</span></div></section>
 </div>
-<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 시범 캐릭터가 실제로 좌우 이동하는 순간에만 채점합니다. 가만히 있는 구간은 무채점이며, 학생도 같은 방향으로 실제 이동해야 점수를 받을 수 있습니다.</div></section>
+<section class="bottom"><div class="meterRow"><div class="meterWrap"><div class="meterHead"><b>동작 일치도</b><span id="thresholdText">성공 기준 86점</span></div><div class="meter"><div id="meterFill"></div></div></div><div id="scoreBig" class="bigScore">--</div></div><div id="message" class="message warn">AI 모델을 준비하는 중입니다…</div><div id="roundBanner" style="margin:12px 0;padding:12px 16px;border:1px solid #3b82f6;border-radius:12px;background:#14213a;font-weight:800;font-size:18px;display:none;text-align:center">ROUND 1 · 동작 익히기</div><div id="result" class="result"><div>🏁 챌린지 종료</div><strong id="finalScore">0점</strong><div id="finalDetail" class="message"></div></div><div class="small">럭비 회피 챌린지는 어깨와 골반이 보이면 시작할 수 있으며, 화면에 보이는 팔·무릎 관절을 함께 활용해 유연하게 비교합니다. 무릎까지 보이면 더 정확하게 채점됩니다. 시범 캐릭터가 실제로 좌우 이동하는 순간에만 채점합니다. 가만히 있는 구간은 무채점이며, 같은 방향으로 실제 이동해야 점수를 받을 수 있습니다. 라운드를 성공해야 다음 단계로 올라갑니다.</div></section>
 </main>
 <script type="module">
 const roundFeedback=document.getElementById('roundFeedback'),
@@ -333,21 +333,32 @@ demo.addEventListener('ended',async()=>{
   const roundPoints=Math.max(0,total-roundStartTotal);
   const roundHits=Math.max(0,hits-roundStartHits);
 
-  // 공개수업용 라운드 판정: 60점 만점 감각으로 환산.
-  // 성공 판정이 최소 3회 이상 있고, 라운드 획득점수가 18점 이상이면 성공.
+  // 라운드 통과 기준: 실제 성공 판정 3회 이상 + 획득점수 18점 이상
   const roundSuccess=(roundHits>=3 && roundPoints>=18);
-  roundResults.push({round:thisRound,success:roundSuccess,points:roundPoints,hits:roundHits});
 
   roundFeedbackTitle.textContent=thisRound<3?`ROUND ${thisRound}`:'FINAL ROUND';
-  roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'아쉬워요! 💪';
+  roundFeedbackScore.textContent=roundSuccess?'성공! ⭐':'다시 도전! 💪';
   roundFeedbackMsg.textContent=roundSuccess
-    ? '방향을 잘 보고 피했어요! 다음 라운드도 도전!'
-    : '괜찮아요! 다음 라운드에서는 방향을 보고 더 크게 움직여 보세요.';
+    ? (thisRound<3?'좋아요! 다음 라운드로 올라갑니다.':'멋져요! FINAL ROUND까지 성공했습니다!')
+    : '아직 통과하지 못했어요. 같은 라운드에 다시 도전합니다!';
   roundFeedback.classList.add('show');
 
-  // 성공/실패와 관계없이 2초 뒤 다음 라운드로 진행
-  await new Promise(r=>setTimeout(r,2000));
+  await new Promise(r=>setTimeout(r,2200));
   roundFeedback.classList.remove('show');
+
+  if(!roundSuccess){
+    // 실패 기록은 전체 최종 결과에 쌓지 않고 같은 라운드를 다시 시작
+    total=roundStartTotal;hits=roundStartHits;combo=0;
+    totalEl.textContent=total;hitsEl.textContent=hits;comboEl.textContent='0';
+    live.textContent='--';big.textContent='대기';meter.style.width='0%';
+    msg.textContent=`💪 ROUND ${currentRound} 다시 도전! 시범과 같은 방향으로 크게 움직여 보세요.`;
+    msg.className='message warn';
+    await new Promise(r=>setTimeout(r,700));
+    playRound();
+    return;
+  }
+
+  roundResults.push({round:thisRound,success:true,points:roundPoints,hits:roundHits});
 
   if(currentRound<totalRounds){
     currentRound++;
@@ -355,7 +366,7 @@ demo.addEventListener('ended',async()=>{
     showRound(currentRound);
     combo=0;comboEl.textContent='0';
     live.textContent='--';big.textContent='대기';meter.style.width='0%';
-    await new Promise(r=>setTimeout(r,500));
+    await new Promise(r=>setTimeout(r,700));
     playRound();
     return;
   }
@@ -365,17 +376,10 @@ demo.addEventListener('ended',async()=>{
   const dirRate=directionAttempts?directionSuccess/directionAttempts:0;
   const avgPose=directionSuccess?motionQualitySum/directionSuccess:0;
   const final100=Math.max(0,Math.min(100,Math.round((dirRate*.70+(avgPose/100)*.30)*100)));
-  const successRounds=roundResults.filter(r=>r.success).length;
   finalScore.textContent=final100+'점 / 100점';
-
-  let praise='💪 다시 도전!';
-  if(successRounds===3) praise='🏆 3라운드 모두 성공!';
-  else if(successRounds===2) praise='⭐ 2라운드 성공!';
-  else if(successRounds===1) praise='👍 1라운드 성공!';
-
-  finalDetail.textContent=`${praise} · 라운드 성공 ${successRounds}/3 · 실제 회피 방향 성공 ${directionSuccess}/${directionAttempts}회 · 최고 콤보 ${maxCombo}회`;
+  finalDetail.textContent=`🏆 3라운드 모두 성공! · 실제 회피 방향 성공 ${directionSuccess}/${directionAttempts}회 · 최고 콤보 ${maxCombo}회`;
   resultBox.classList.add('show');
-  msg.textContent='🏁 3라운드 챌린지가 끝났습니다.';
+  msg.textContent='🏁 3라운드 챌린지 성공! 모든 라운드를 통과했습니다.';
   msg.className='message ok';
 });
 </script></div>
